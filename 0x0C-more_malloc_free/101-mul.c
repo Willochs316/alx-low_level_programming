@@ -1,137 +1,114 @@
 #include "main.h"
-#include <stdio.h>
-#include <stdlib.h>
-/**
-  * int_calloc - special calloc but 4 int arrays
-  * @nmemb: n memb
-  * @size: size of array
-  * Return: int *
-  */
-int *int_calloc(int nmemb, unsigned int size)
+
+#define STR_TO_INT(val) (val - 48)
+#define INT_TO_STR(val) (val + 48)
+
+char *add_to_result(char *string, int position, int buffer)
 {
-	/* declarations */
-	int *p, n;
-	/* checking inputs */
-	if (nmemb == 0 || size == 0)
-		return (NULL);
-	/* malloc the space & check for fail */
-	p = malloc(nmemb * size);
-	if (p == NULL)
-		return (NULL);
-	/* calloc */
-	for (n = 0; n < nmemb; n++)
-		p[n] = 0;
-	return (p);
+	int remainder, m;
+
+	string[position] = INT_TO_STR(buffer % 10);
+	if (buffer > 9)
+	{
+		remainder = buffer / 10;
+		for (m = position - 1; string[position] < 9; m--)
+		{
+			string[m] = INT_TO_STR(remainder + STR_TO_INT(string[m]));
+			remainder = 0;
+		}
+		string[m] = INT_TO_STR(remainder + STR_TO_INT(string[m]));
+	}
+	return (string);
 }
 
-/**
-  * mult - multiplication
-  * @product: int * 4 answer
-  * @n1: string num1
-  * @n2: string num2
-  * @len1: len num1
-  * @len2: len num2
-  * Return: void
-  */
-void mult(int *product, char *n1, char *n2, int len1, int len2)
+char *rid_zeros(char *string, int length)
 {
-	/* declarations */
-	int i;
-	int j;
-	int f1, f2;
-	int sum;
-	/* the long math */
-	for (i = len1 - 1; i >= 0; i--)
+	int flag, iteration;
+	char *replica;
+
+	replica = malloc(sizeof(char) * length);
+
+	for (flag = 0, iteration = 0; *string; string++)
 	{
-		sum = 0;
-		f1 = n1[i] - '0';
-		for (j = len2 - 1; j >= 0; j--)
+		if (*string != '0' || flag != 0)
 		{
-			f2 = n2[j] - '0';
-			sum += product[i + j + 1] + (f1 * f2);
-			product[i + j + 1] = sum % 10;
-			sum /= 10;
+			flag = 1;
+			*replica = *string;
+			replica++;
+			continue;
 		}
-		if (sum > 0)
-			product[i + j + 1] += sum;
+		iteration++;
 	}
-	for (i = 0; product[i] == 0 && i < len1 + len2; i++)
-	{}
-	if (i == len1 + len2)
-		_putchar('0');
-	for (; i < len1 + len2; i++)
-		_putchar(product[i] + '0');
-	_putchar('\n');
+	return (replica - length + iteration);
 }
 
-/**
-  * is_valid - is the number a valid one
-  * @num : char string num
-  * Return: int, 1 if true 0 if false
-  */
-int is_valid(char *num)
+int is_int(const char *string)
 {
-	/* declarations */
-	int i;
-	/* checking for ints */
-	for (i = 0; num[i]; i++)
+	int character;
+
+	for (; *string; string++)
 	{
-		if (num[i] < '0' || num[i] > '9')
-			return (0);
+		character = STR_TO_INT(*string);
+		if (character >= 0 && character <= 9)
+			continue;
+		return (1);
 	}
-	return (1);
+	return (0);
 }
-/**
-  * err - errors r us
-  * @status: error code 4 exit
-  * Return: void
-  */
-void err(int status)
+
+void preliminary_checks(int total, char const *str1, char const *str2)
 {
-	_putchar('E');
-	_putchar('r');
-	_putchar('r');
-	_putchar('o');
-	_putchar('r');
-	_putchar('\n');
-	exit(status);
+	if (total != 3)
+	{
+		printf("Error\n");
+		exit(98);
+	}
+	if (!(is_int(str1) == 0 && is_int(str2) == 0))
+	{
+		printf("Error\n");
+		exit(98);
+	}
 }
-/**
-  * main - getting the args
-  * @argc: args #
-  * @argv: arg array
-  * Return: 0
-  */
-int main(int argc, char **argv)
+
+int main(int argc, char const *argv[])
 {
-	/* declarations */
-	int i, j, len1 = 0, len2 = 0;
-	int *res;
-	/* too many args? too few? */
-	if (argc != 3)
+	int character1, character2, int_buffer, i, j, k, l;
+	int length_s1, length_s2, length_buffer, position, total_length;
+	char *result;
+	char const *ptr1 = argv[1], *ptr2 = argv[2], *buffer;
+
+	preliminary_checks(argc, ptr1, ptr2);
+	for (length_s1 = 0; ptr1[length_s1]; length_s1++)
+		;
+	for (length_s2 = 0; ptr2[length_s2]; length_s2++)
+		;
+	if (length_s1 < length_s2)
 	{
-		err(98);
+		buffer = ptr1;
+		ptr1 = ptr2;
+		ptr2 = buffer;
+		length_buffer = length_s1;
+		length_s1 = length_s2;
+		length_s2 = length_buffer;
 	}
-	/* using isvalid */
-	for (i = 1; i < argc; i++)
+	total_length = length_s1 * length_s2;
+	result = malloc(sizeof(char) * total_length);
+	result[total_length] = '\0';
+	for (i = 0; i < total_length; i++)
+		result[i] = INT_TO_STR(0);
+	for (i = length_s2 - 1, int_buffer = 0, position = total_length - 1, l = 0;
+		 i >= 0; i--, l++)
 	{
-		if (!(is_valid(argv[i])))
-			err(98);
-		if (i == 1)
+		character2 = STR_TO_INT(ptr2[i]);
+		for (j = length_s1 - 1, k = 0; j >= 0; j--, position--, k++)
 		{
-			for (j = 0; argv[i][j]; j++)
-				len1++;
+			character1 = STR_TO_INT(ptr1[j]);
+			int_buffer = (character1 * character2) + STR_TO_INT(result[position]);
+			result = add_to_result(result, position, int_buffer);
 		}
-		if (i == 2)
-		{
-			for (j = 0; argv[i][j]; j++)
-				len2++;
-		}
+		position = total_length - l - 2;
 	}
-	res = int_calloc(len1 + len2, sizeof(int));
-	if (res == NULL)
-		err(98);
-	mult(res, argv[1], argv[2], len1, len2);
-	free(res);
+	result = rid_zeros(result, total_length);
+	printf("%s\n", result);
 	return (0);
 }
